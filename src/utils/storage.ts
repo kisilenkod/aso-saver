@@ -1,12 +1,29 @@
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   query, where, onSnapshot, arrayUnion, arrayRemove,
   type Unsubscribe
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { AppEntry } from '../types';
 
 const APPS_COLLECTION = 'apps';
+
+// Firebase Storage — upload image file, return download URL
+export async function uploadImage(path: string, file: File): Promise<string> {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
+
+// Delete image from Storage
+export async function deleteImage(path: string): Promise<void> {
+  try {
+    await deleteObject(ref(storage, path));
+  } catch {
+    // Ignore if file doesn't exist
+  }
+}
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { AppEntry, AppVersion, LocalizationData, Screenshot, LANGUAGES } from '../types';
-import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical, ExternalLink, Maximize2, Copy, Pencil, Check, Tag, ClipboardCopy, ClipboardCheck } from 'lucide-react';
+import { uploadImage } from '../utils/storage';
+import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical, ExternalLink, Maximize2, Copy, Pencil, Check, Tag, ClipboardCopy, ClipboardCheck, Loader2 } from 'lucide-react';
 
 interface Props {
   app: AppEntry;
@@ -88,18 +89,24 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   const locFieldKey = `${app.id}-${app.activeVersionId}-${activeTab}`;
   const appFieldKey = app.id;
 
+  const [uploading, setUploading] = useState(false);
+
   const handleIconUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        onUpdate({ ...app, icon: ev.target?.result as string });
-      };
-      reader.readAsDataURL(file);
+      setUploading(true);
+      try {
+        const path = `apps/${app.id}/icon_${Date.now()}`;
+        const url = await uploadImage(path, file);
+        onUpdate({ ...appRef.current, icon: url });
+      } catch (err) {
+        alert('Failed to upload icon');
+      }
+      setUploading(false);
     };
     input.click();
   };
@@ -211,47 +218,47 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
     if (activeTab >= updated.length) setActiveTab(updated.length - 1);
   };
 
-  // Screenshots — use refs to read latest state when async FileReaders complete
+  // Screenshots — upload to Firebase Storage
   const addScreenshots = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files || files.length === 0) return;
 
+      setUploading(true);
       const fileArray = Array.from(files);
       const newScreenshots: Screenshot[] = [];
-      let loaded = 0;
 
-      fileArray.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          newScreenshots.push({
-            id: generateId(),
-            url: ev.target?.result as string,
-            name: file.name,
-          });
-          loaded++;
-          if (loaded === fileArray.length) {
-            // Read latest state from refs
-            const latestApp = appRef.current;
-            const latestTab = activeTabRef.current;
-            const latestVersion = latestApp.versions.find(v => v.id === latestApp.activeVersionId) || latestApp.versions[0];
-            if (!latestVersion) return;
-            const updatedVersion = { ...latestVersion };
-            updatedVersion.localizations = [...latestVersion.localizations];
-            const loc = { ...updatedVersion.localizations[latestTab] };
-            loc.screenshots = [...loc.screenshots, ...newScreenshots];
-            updatedVersion.localizations[latestTab] = loc;
-            const updatedApp = { ...latestApp };
-            updatedApp.versions = latestApp.versions.map(v => v.id === latestVersion.id ? updatedVersion : v);
-            onUpdate(updatedApp);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+      for (const file of fileArray) {
+        try {
+          const id = generateId();
+          const path = `apps/${app.id}/screenshots/${id}_${file.name}`;
+          const url = await uploadImage(path, file);
+          newScreenshots.push({ id, url, name: file.name });
+        } catch {
+          // skip failed uploads
+        }
+      }
+
+      if (newScreenshots.length > 0) {
+        const latestApp = appRef.current;
+        const latestTab = activeTabRef.current;
+        const latestVersion = latestApp.versions.find(v => v.id === latestApp.activeVersionId) || latestApp.versions[0];
+        if (latestVersion) {
+          const updatedVersion = { ...latestVersion };
+          updatedVersion.localizations = [...latestVersion.localizations];
+          const loc = { ...updatedVersion.localizations[latestTab] };
+          loc.screenshots = [...loc.screenshots, ...newScreenshots];
+          updatedVersion.localizations[latestTab] = loc;
+          const updatedApp = { ...latestApp };
+          updatedApp.versions = latestApp.versions.map(v => v.id === latestVersion.id ? updatedVersion : v);
+          onUpdate(updatedApp);
+        }
+      }
+      setUploading(false);
     };
     input.click();
   };
@@ -299,7 +306,9 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
           className="w-20 h-20 shrink-0 rounded-2xl border-2 border-dashed border-gray-700 hover:border-blue-500 cursor-pointer flex items-center justify-center overflow-hidden bg-gray-900 transition-colors group"
           title="Upload app icon"
         >
-          {app.icon ? (
+          {uploading && !app.icon ? (
+            <Loader2 size={20} className="animate-spin text-blue-500" />
+          ) : app.icon ? (
             <img src={app.icon} alt="App Icon" className="w-full h-full object-cover rounded-2xl" />
           ) : (
             <div className="text-center">
@@ -525,10 +534,10 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
             </div>
           )}
           {canEdit && (
-            <button onClick={addScreenshots}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition-colors">
-              <Image size={16} />
-              Add Screenshots
+            <button onClick={addScreenshots} disabled={uploading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition-colors disabled:opacity-50">
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
+              {uploading ? 'Uploading...' : 'Add Screenshots'}
             </button>
           )}
         </div>
