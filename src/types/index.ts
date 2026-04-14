@@ -29,6 +29,15 @@ export interface MemberInfo {
   role: MemberRole;
 }
 
+export interface HistoryEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhoto: string;
+  action: string;
+  timestamp: number;
+}
+
 export interface AppEntry {
   id: string;
   name: string;
@@ -42,6 +51,7 @@ export interface AppEntry {
   members: Record<string, MemberInfo>;
   pendingEmails: string[];
   pendingInvites: Record<string, { email: string; role: 'editor' | 'viewer'; invitedAt: number }>;
+  history: HistoryEntry[];
   createdAt: number;
   updatedAt: number;
 }

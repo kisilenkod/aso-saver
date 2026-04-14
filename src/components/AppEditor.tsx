@@ -49,15 +49,24 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   };
 
   const updateField = (field: string, value: string) => {
-    const updatedVersion = { ...activeVersion };
-    updatedVersion.localizations = [...activeVersion.localizations];
-    updatedVersion.localizations[activeTab] = { ...currentLoc, [field]: value };
-    updateVersion(updatedVersion);
+    const latestApp = appRef.current;
+    const latestVersion = latestApp.versions.find(v => v.id === latestApp.activeVersionId) || latestApp.versions[0];
+    if (!latestVersion) return;
+    const updatedVersion = { ...latestVersion };
+    updatedVersion.localizations = [...latestVersion.localizations];
+    updatedVersion.localizations[activeTab] = { ...updatedVersion.localizations[activeTab], [field]: value };
+    const updated = { ...latestApp };
+    updated.versions = latestApp.versions.map(v => v.id === updatedVersion.id ? updatedVersion : v);
+    onUpdate(updated);
   };
 
   const updateAppMeta = (field: string, value: string) => {
-    onUpdate({ ...app, [field]: value });
+    onUpdate({ ...appRef.current, [field]: value });
   };
+
+  // Key that forces re-mount of uncontrolled inputs when context changes
+  const locFieldKey = `${app.id}-${app.activeVersionId}-${activeTab}`;
+  const appFieldKey = app.id;
 
   const handleIconUpload = () => {
     const input = document.createElement('input');
@@ -283,18 +292,18 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
         <div className="flex-1 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">App Name</label>
-            <input type="text" value={app.name} onChange={e => updateAppMeta('name', e.target.value)} readOnly={!canEdit}
+            <input key={`name-${appFieldKey}`} type="text" defaultValue={app.name} onChange={e => updateAppMeta('name', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="My App" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">Bundle ID</label>
-            <input type="text" value={app.bundleId} onChange={e => updateAppMeta('bundleId', e.target.value)} readOnly={!canEdit}
+            <input key={`bundle-${appFieldKey}`} type="text" defaultValue={app.bundleId} onChange={e => updateAppMeta('bundleId', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="com.company.app" />
           </div>
           <div className="col-span-2">
             <label className="block text-xs font-medium text-gray-400 mb-1.5">App Store URL</label>
             <div className="flex gap-2">
-              <input type="url" value={app.appStoreUrl || ''} onChange={e => updateAppMeta('appStoreUrl', e.target.value)} readOnly={!canEdit}
+              <input key={`url-${appFieldKey}`} type="url" defaultValue={app.appStoreUrl || ''} onChange={e => updateAppMeta('appStoreUrl', e.target.value)} readOnly={!canEdit}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="https://apps.apple.com/app/..." />
               {app.appStoreUrl && (
                 <a href={app.appStoreUrl} target="_blank" rel="noopener noreferrer"
@@ -419,7 +428,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
               <label className="text-xs font-medium text-gray-400">Title</label>
               <span className={`text-xs ${currentLoc.title.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.title.length}/30</span>
             </div>
-            <input type="text" value={currentLoc.title} onChange={e => updateField('title', e.target.value)} readOnly={!canEdit}
+            <input key={`title-${locFieldKey}`} type="text" defaultValue={currentLoc.title} onChange={e => updateField('title', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder={`App title (${langName})`} />
           </div>
           <div>
@@ -427,7 +436,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
               <label className="text-xs font-medium text-gray-400">Subtitle</label>
               <span className={`text-xs ${currentLoc.subtitle.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.subtitle.length}/30</span>
             </div>
-            <input type="text" value={currentLoc.subtitle} onChange={e => updateField('subtitle', e.target.value)} readOnly={!canEdit}
+            <input key={`subtitle-${locFieldKey}`} type="text" defaultValue={currentLoc.subtitle} onChange={e => updateField('subtitle', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder={`App subtitle (${langName})`} />
           </div>
         </div>
@@ -440,7 +449,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
             <label className="text-xs font-medium text-gray-400">Keywords (comma-separated)</label>
             <span className={`text-xs ${keywordsCount > 100 ? 'text-red-400' : 'text-gray-500'}`}>{keywordsCount}/100</span>
           </div>
-          <textarea value={currentLoc.keywords} onChange={e => updateField('keywords', e.target.value)} readOnly={!canEdit} rows={3}
+          <textarea key={`keywords-${locFieldKey}`} defaultValue={currentLoc.keywords} onChange={e => updateField('keywords', e.target.value)} readOnly={!canEdit} rows={3}
             className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
             placeholder="keyword1,keyword2,keyword3" />
         </div>
@@ -453,7 +462,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
             <label className="text-xs font-medium text-gray-400">Description</label>
             <span className={`text-xs ${descriptionCount > 4000 ? 'text-red-400' : 'text-gray-500'}`}>{descriptionCount}/4000</span>
           </div>
-          <textarea value={currentLoc.description} onChange={e => updateField('description', e.target.value)} readOnly={!canEdit} rows={10}
+          <textarea key={`description-${locFieldKey}`} defaultValue={currentLoc.description} onChange={e => updateField('description', e.target.value)} readOnly={!canEdit} rows={10}
             className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-y"
             placeholder={`App description (${langName})`} />
         </div>

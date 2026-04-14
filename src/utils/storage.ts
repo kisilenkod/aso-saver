@@ -52,6 +52,7 @@ export async function createApp(userId: string, userEmail: string, userName: str
     },
     pendingEmails: [],
     pendingInvites: {},
+    history: [{ id: generateId(), userId, userName, userPhoto, action: 'Created app', timestamp: Date.now() }],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
