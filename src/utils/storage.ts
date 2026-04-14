@@ -186,21 +186,176 @@ export async function saveUserProfile(uid: string, email: string, displayName: s
   await setDoc(doc(db, 'users', uid), { email, displayName, photoURL }, { merge: true });
 }
 
-// Export/Import
-export function exportApps(apps: AppEntry[]): string {
-  const exportData = apps.map(({ memberIds, members, ownerId, pendingEmails, pendingInvites, ...rest }) => rest);
-  return JSON.stringify({ apps: exportData, version: 2 }, null, 2);
+// CSV helpers
+function escapeCsv(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+    return '"' + value.replace(/"/g, '""') + '"';
+  }
+  return value;
 }
 
-export async function importApps(json: string, userId: string, userEmail: string, userName: string, userPhoto: string): Promise<void> {
-  const data = JSON.parse(json);
-  if (!data.apps || !Array.isArray(data.apps)) throw new Error('Invalid format');
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        fields.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current);
+  return fields;
+}
 
-  for (const app of data.apps) {
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      current += ch;
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        current += ch;
+      } else if (ch === '\n') {
+        if (current.endsWith('\r')) current = current.slice(0, -1);
+        rows.push(parseCsvLine(current));
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  if (current.trim()) {
+    if (current.endsWith('\r')) current = current.slice(0, -1);
+    rows.push(parseCsvLine(current));
+  }
+  return rows;
+}
+
+// Export/Import as CSV
+const CSV_HEADERS = ['App Name', 'Bundle ID', 'App Store URL', 'Version', 'Language', 'Title', 'Subtitle', 'Keywords', 'Description'];
+
+export function exportApps(apps: AppEntry[]): string {
+  const lines: string[] = [CSV_HEADERS.map(escapeCsv).join(',')];
+
+  for (const app of apps) {
+    for (const version of app.versions) {
+      for (const loc of version.localizations) {
+        const row = [
+          app.name,
+          app.bundleId,
+          app.appStoreUrl || '',
+          version.version,
+          loc.language,
+          loc.title,
+          loc.subtitle,
+          loc.keywords,
+          loc.description,
+        ];
+        lines.push(row.map(escapeCsv).join(','));
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
+export async function importApps(csv: string, userId: string, userEmail: string, userName: string, userPhoto: string): Promise<void> {
+  const rows = parseCsv(csv);
+  if (rows.length < 2) throw new Error('Invalid CSV');
+
+  const header = rows[0].map(h => h.trim());
+  const idx = (name: string) => {
+    const i = header.indexOf(name);
+    if (i === -1) throw new Error(`Missing column: ${name}`);
+    return i;
+  };
+
+  const iName = idx('App Name');
+  const iBundle = idx('Bundle ID');
+  const iUrl = idx('App Store URL');
+  const iVersion = idx('Version');
+  const iLang = idx('Language');
+  const iTitle = idx('Title');
+  const iSubtitle = idx('Subtitle');
+  const iKeywords = idx('Keywords');
+  const iDesc = idx('Description');
+
+  // Group rows by app name
+  const appMap = new Map<string, { bundleId: string; appStoreUrl: string; versions: Map<string, { language: string; title: string; subtitle: string; keywords: string; description: string }[]> }>();
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (row.length < CSV_HEADERS.length) continue;
+
+    const appName = row[iName].trim();
+    if (!appName) continue;
+
+    if (!appMap.has(appName)) {
+      appMap.set(appName, { bundleId: row[iBundle] || '', appStoreUrl: row[iUrl] || '', versions: new Map() });
+    }
+    const appData = appMap.get(appName)!;
+
+    const versionName = row[iVersion] || '1.0';
+    if (!appData.versions.has(versionName)) {
+      appData.versions.set(versionName, []);
+    }
+    appData.versions.get(versionName)!.push({
+      language: row[iLang] || 'en-US',
+      title: row[iTitle] || '',
+      subtitle: row[iSubtitle] || '',
+      keywords: row[iKeywords] || '',
+      description: row[iDesc] || '',
+    });
+  }
+
+  // Create apps in Firestore
+  for (const [appName, appData] of appMap) {
+    const versions = Array.from(appData.versions.entries()).map(([versionName, locs]) => ({
+      id: generateId(),
+      version: versionName,
+      localizations: locs.map(l => ({ ...l, screenshots: [] })),
+      createdAt: Date.now(),
+    }));
+
     const appId = generateId();
     await setDoc(doc(db, APPS_COLLECTION, appId), {
-      ...app,
-      id: undefined,
+      name: appName,
+      bundleId: appData.bundleId,
+      icon: '',
+      appStoreUrl: appData.appStoreUrl,
+      versions,
+      activeVersionId: versions[0].id,
       ownerId: userId,
       memberIds: [userId],
       members: {
@@ -208,6 +363,7 @@ export async function importApps(json: string, userId: string, userEmail: string
       },
       pendingEmails: [],
       pendingInvites: {},
+      history: [{ id: generateId(), userId, userName, userPhoto: '', action: 'Imported from CSV', timestamp: Date.now() }],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

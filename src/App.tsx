@@ -149,11 +149,11 @@ export default function App() {
 
   const handleExport = () => {
     const data = exportApps(apps);
-    const blob = new Blob([data], { type: 'application/json' });
+    const blob = new Blob(['\uFEFF' + data], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `aso-saver-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `aso-saver-export-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -162,7 +162,7 @@ export default function App() {
     if (!user) return;
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.csv';
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
@@ -170,7 +170,7 @@ export default function App() {
       reader.onload = async (ev) => {
         try {
           await importApps(ev.target?.result as string, user.uid, user.email || '', user.displayName || '', user.photoURL || '');
-        } catch { alert('Invalid file format'); }
+        } catch { alert('Invalid CSV format'); }
       };
       reader.readAsText(file);
     };
