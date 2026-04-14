@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AppEntry, MemberRole } from '../types';
-import { inviteMember, updateMemberRole, updatePendingRole, removeMember, removePendingInvite } from '../utils/storage';
+import { inviteMember, updateMemberRole, updatePendingRole, removeMember, removePendingInvite, transferOwnership } from '../utils/storage';
 import { X, UserPlus, Trash2, Crown, Pencil, Eye, Clock } from 'lucide-react';
 
 interface Props {
@@ -68,9 +68,14 @@ export default function ShareDialog({ app, currentUserId, onClose }: Props) {
     setLoading(false);
   };
 
-  const handleRoleChange = async (userId: string, newRole: 'editor' | 'viewer') => {
+  const handleRoleChange = async (userId: string, newRole: 'owner' | 'editor' | 'viewer') => {
     try {
-      await updateMemberRole(app.id, userId, newRole);
+      if (newRole === 'owner') {
+        if (!confirm('Transfer ownership? You will become an Editor.')) return;
+        await transferOwnership(app.id, currentUserId, userId);
+      } else {
+        await updateMemberRole(app.id, userId, newRole);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to update role');
     }
@@ -164,8 +169,9 @@ export default function ShareDialog({ app, currentUserId, onClose }: Props) {
                   <div className="flex items-center gap-2">
                     {isOwner && member.role !== 'owner' ? (
                       <>
-                        <select value={member.role} onChange={e => handleRoleChange(userId, e.target.value as 'editor' | 'viewer')}
+                        <select value={member.role} onChange={e => handleRoleChange(userId, e.target.value as 'owner' | 'editor' | 'viewer')}
                           className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-gray-300 focus:outline-none">
+                          <option value="owner">Owner</option>
                           <option value="editor">Editor</option>
                           <option value="viewer">Viewer</option>
                         </select>

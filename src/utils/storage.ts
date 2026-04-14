@@ -122,6 +122,18 @@ export async function updateMemberRole(
   });
 }
 
+export async function transferOwnership(
+  appId: string,
+  currentOwnerId: string,
+  newOwnerId: string
+): Promise<void> {
+  await updateDoc(doc(db, APPS_COLLECTION, appId), {
+    ownerId: newOwnerId,
+    [`members.${newOwnerId}.role`]: 'owner',
+    [`members.${currentOwnerId}.role`]: 'editor',
+  });
+}
+
 export async function updatePendingRole(
   appId: string,
   email: string,
