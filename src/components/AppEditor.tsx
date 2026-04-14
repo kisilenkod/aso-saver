@@ -21,8 +21,8 @@ function CopyButton({ value, field, copiedField, onCopy }: { value: string; fiel
   };
   return (
     <button onClick={handleCopy} title={isCopied ? 'Copied!' : 'Copy to clipboard'}
-      className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : 'text-gray-600 hover:text-gray-300'}`}>
-      {isCopied ? <ClipboardCheck size={13} /> : <ClipboardCopy size={13} />}
+      className={`px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${isCopied ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>
+      {isCopied ? <><ClipboardCheck size={14} /> Copied</> : <><ClipboardCopy size={14} /> Copy</>}
     </button>
   );
 }
