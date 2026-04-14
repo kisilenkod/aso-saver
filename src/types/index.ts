@@ -13,12 +13,11 @@ export interface LocalizationData {
   screenshots: Screenshot[];
 }
 
-export interface DescriptionVersion {
+export interface AppVersion {
   id: string;
-  language: string;
-  description: string;
-  timestamp: number;
-  label: string;
+  version: string;
+  localizations: LocalizationData[];
+  createdAt: number;
 }
 
 export interface AppEntry {
@@ -27,8 +26,8 @@ export interface AppEntry {
   bundleId: string;
   icon: string;
   appStoreUrl: string;
-  localizations: LocalizationData[];
-  descriptionVersions: DescriptionVersion[];
+  versions: AppVersion[];
+  activeVersionId: string;
   createdAt: number;
   updatedAt: number;
 }

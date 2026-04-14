@@ -10,7 +10,13 @@
       "Bash(npx vite:*)",
       "Read(//tmp/**)",
       "Bash(pkill -f \"vite --port 5173\")",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(vercel --version)",
+      "Bash(vercel login:*)",
+      "Bash(vercel --prod --yes)",
+      "Bash(vercel --prod --yes --name aso-saver)"
     ]
   }
 }

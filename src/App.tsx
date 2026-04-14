@@ -42,16 +42,22 @@ export default function App() {
   };
 
   const handleAddApp = () => {
+    const versionId = generateId();
     const newApp: AppEntry = {
       id: generateId(),
       name: 'New App',
       bundleId: '',
       icon: '',
       appStoreUrl: '',
-      localizations: [
-        { language: 'en-US', title: '', subtitle: '', keywords: '', description: '', screenshots: [] }
-      ],
-      descriptionVersions: [],
+      versions: [{
+        id: versionId,
+        version: '1.0',
+        localizations: [
+          { language: 'en-US', title: '', subtitle: '', keywords: '', description: '', screenshots: [] }
+        ],
+        createdAt: Date.now(),
+      }],
+      activeVersionId: versionId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
