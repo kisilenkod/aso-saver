@@ -46,6 +46,8 @@ export default function App() {
       id: generateId(),
       name: 'New App',
       bundleId: '',
+      icon: '',
+      appStoreUrl: '',
       localizations: [
         { language: 'en-US', title: '', subtitle: '', keywords: '', description: '', screenshots: [] }
       ],

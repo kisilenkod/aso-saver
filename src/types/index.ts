@@ -25,6 +25,8 @@ export interface AppEntry {
   id: string;
   name: string;
   bundleId: string;
+  icon: string;
+  appStoreUrl: string;
   localizations: LocalizationData[];
   descriptionVersions: DescriptionVersion[];
   createdAt: number;

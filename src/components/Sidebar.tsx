@@ -52,7 +52,11 @@ export default function Sidebar({ apps, selectedAppId, onSelectApp, onAddApp, on
               }`}
               onClick={() => onSelectApp(app.id)}
             >
-              <Smartphone size={18} className="shrink-0 opacity-60" />
+              {app.icon ? (
+                <img src={app.icon} alt="" className="w-8 h-8 rounded-lg shrink-0 object-cover" />
+              ) : (
+                <Smartphone size={18} className="shrink-0 opacity-60" />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{app.name}</p>
                 {app.bundleId && (
