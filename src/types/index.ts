@@ -40,6 +40,8 @@ export interface AppEntry {
   ownerId: string;
   memberIds: string[];
   members: Record<string, MemberInfo>;
+  pendingEmails: string[];
+  pendingInvites: Record<string, { email: string; role: 'editor' | 'viewer'; invitedAt: number }>;
   createdAt: number;
   updatedAt: number;
 }

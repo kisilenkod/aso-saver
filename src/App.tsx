@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { AppEntry } from './types';
-import { subscribeToApps, createApp, saveApp, deleteApp, exportApps, importApps, saveUserProfile } from './utils/storage';
+import { subscribeToApps, createApp, saveApp, deleteApp, exportApps, importApps, saveUserProfile, activatePendingInvites } from './utils/storage';
 import Sidebar from './components/Sidebar';
 import AppEditor from './components/AppEditor';
 import LoginScreen from './components/LoginScreen';
@@ -24,6 +24,7 @@ export default function App() {
       setAuthLoading(false);
       if (u) {
         await saveUserProfile(u.uid, u.email || '', u.displayName || '', u.photoURL || '');
+        await activatePendingInvites(u.uid, u.email || '', u.displayName || '', u.photoURL || '');
       }
     });
     return unsub;
