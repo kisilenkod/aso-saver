@@ -39,7 +39,10 @@ export default function App() {
     return unsub;
   }, [user]);
 
-  const handleLogout = () => signOut(auth);
+  const handleLogout = () => {
+    if (!confirm('Are you sure you want to sign out?')) return;
+    signOut(auth);
+  };
 
   const handleAddApp = async () => {
     if (!user) return;
@@ -51,6 +54,7 @@ export default function App() {
     const app = apps.find(a => a.id === id);
     if (!app || !user) return;
     if (app.ownerId !== user.uid) return;
+    if (!confirm(`Delete "${app.name}"? All versions and data will be lost.`)) return;
     await deleteApp(id);
     if (selectedAppId === id) {
       setSelectedAppId(null);

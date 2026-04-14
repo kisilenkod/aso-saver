@@ -107,6 +107,8 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
 
   const deleteVersion = (versionId: string) => {
     if (app.versions.length <= 1) return;
+    const version = app.versions.find(v => v.id === versionId);
+    if (!confirm(`Delete version ${version?.version || ''}? This cannot be undone.`)) return;
     const remaining = app.versions.filter(v => v.id !== versionId);
     onUpdate({
       ...app,
