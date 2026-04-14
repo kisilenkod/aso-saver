@@ -303,9 +303,9 @@ export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props)
       {/* App Meta: Icon + fields */}
       <div className="flex gap-4 items-start">
         <div
-          onClick={handleIconUpload}
-          className="w-20 h-20 shrink-0 rounded-2xl border-2 border-dashed border-gray-700 hover:border-blue-500 cursor-pointer flex items-center justify-center overflow-hidden bg-gray-900 transition-colors group"
-          title="Upload app icon"
+          onClick={canEdit ? handleIconUpload : undefined}
+          className={`w-20 h-20 shrink-0 rounded-2xl border-2 border-dashed border-gray-700 flex items-center justify-center overflow-hidden bg-gray-900 transition-colors group ${canEdit ? 'hover:border-blue-500 cursor-pointer' : ''}`}
+          title={canEdit ? 'Upload app icon' : ''}
         >
           {uploading && !app.icon ? (
             <Loader2 size={20} className="animate-spin text-blue-500" />
@@ -424,14 +424,14 @@ export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props)
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                   i === activeTab ? 'bg-blue-600/20 text-blue-400 font-medium' : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}>{ln}</button>
-              {activeVersion.localizations.length > 1 && (
+              {canEdit && activeVersion.localizations.length > 1 && (
                 <button onClick={() => removeLanguage(i)}
                   className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-500 hover:text-red-400 transition-all"><X size={12} /></button>
               )}
             </div>
           );
         })}
-        <div className="relative">
+        {canEdit && <div className="relative">
           <button onClick={() => setShowAddLang(!showAddLang)}
             className="p-1.5 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"><Plus size={16} /></button>
           {showAddLang && (
@@ -444,7 +444,7 @@ export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props)
               ))}
             </div>
           )}
-        </div>
+        </div>}
       </div>
 
       {/* Title & Subtitle */}
@@ -513,20 +513,20 @@ export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props)
           {currentLoc.screenshots.length > 0 && (
             <div className="flex gap-3 mb-3 overflow-x-auto pb-2">
               {currentLoc.screenshots.map((screenshot, index) => (
-                <div key={screenshot.id} draggable onDragStart={() => handleDragStart(index)} onDragOver={(e) => handleDragOver(e, index)}
-                  onDrop={(e) => handleDrop(e, index)} onDragEnd={handleDragEnd}
+                <div key={screenshot.id} draggable={canEdit} onDragStart={canEdit ? () => handleDragStart(index) : undefined} onDragOver={canEdit ? (e) => handleDragOver(e, index) : undefined}
+                  onDrop={canEdit ? (e) => handleDrop(e, index) : undefined} onDragEnd={canEdit ? handleDragEnd : undefined}
                   className={`relative group shrink-0 transition-all ${dragOverIndex === index ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-950 rounded-lg' : ''} ${dragIndex === index ? 'opacity-40' : ''}`}>
-                  <div className="absolute top-1 left-1 p-1 bg-black/60 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-10">
+                  {canEdit && <div className="absolute top-1 left-1 p-1 bg-black/60 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-10">
                     <GripVertical size={12} className="text-white" />
-                  </div>
+                  </div>}
                   <button onClick={() => setPreviewImage(screenshot.url)}
                     className="absolute top-1 left-1/2 -translate-x-1/2 p-1 bg-black/60 hover:bg-black/80 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Preview">
                     <Maximize2 size={12} className="text-white" />
                   </button>
-                  <button onClick={() => removeScreenshot(screenshot.id)}
+                  {canEdit && <button onClick={() => removeScreenshot(screenshot.id)}
                     className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Remove">
                     <Trash2 size={12} className="text-white" />
-                  </button>
+                  </button>}
                   <img src={screenshot.url} alt={screenshot.name} className="h-48 w-auto rounded-lg border border-gray-700 object-cover cursor-pointer"
                     onClick={() => setPreviewImage(screenshot.url)} />
                   <p className="text-xs text-gray-500 mt-1 max-w-[120px] truncate">{screenshot.name}</p>
