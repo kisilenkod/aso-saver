@@ -44,6 +44,18 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [editKey, setEditKey] = useState(0);
 
+  // Warn before closing/refreshing with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
   // Auth state listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
