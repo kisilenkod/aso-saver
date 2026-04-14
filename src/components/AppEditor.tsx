@@ -5,13 +5,14 @@ import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical,
 interface Props {
   app: AppEntry;
   onUpdate: (app: AppEntry) => void;
+  canEdit: boolean;
 }
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-export default function AppEditor({ app, onUpdate }: Props) {
+export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [showAddLang, setShowAddLang] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -269,18 +270,18 @@ export default function AppEditor({ app, onUpdate }: Props) {
         <div className="flex-1 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">App Name</label>
-            <input type="text" value={app.name} onChange={e => updateAppMeta('name', e.target.value)}
+            <input type="text" value={app.name} onChange={e => updateAppMeta('name', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="My App" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">Bundle ID</label>
-            <input type="text" value={app.bundleId} onChange={e => updateAppMeta('bundleId', e.target.value)}
+            <input type="text" value={app.bundleId} onChange={e => updateAppMeta('bundleId', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="com.company.app" />
           </div>
           <div className="col-span-2">
             <label className="block text-xs font-medium text-gray-400 mb-1.5">App Store URL</label>
             <div className="flex gap-2">
-              <input type="url" value={app.appStoreUrl || ''} onChange={e => updateAppMeta('appStoreUrl', e.target.value)}
+              <input type="url" value={app.appStoreUrl || ''} onChange={e => updateAppMeta('appStoreUrl', e.target.value)} readOnly={!canEdit}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder="https://apps.apple.com/app/..." />
               {app.appStoreUrl && (
                 <a href={app.appStoreUrl} target="_blank" rel="noopener noreferrer"
@@ -300,13 +301,15 @@ export default function AppEditor({ app, onUpdate }: Props) {
             <Tag size={16} className="text-gray-400" />
             <span className="text-sm font-medium text-gray-300">Versions</span>
           </div>
-          <button
-            onClick={addVersion}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <Plus size={14} />
-            New Version
-          </button>
+          {canEdit && (
+            <button
+              onClick={addVersion}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <Plus size={14} />
+              New Version
+            </button>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {app.versions.map(v => (
@@ -336,19 +339,21 @@ export default function AppEditor({ app, onUpdate }: Props) {
                   >
                     {v.version}
                   </button>
-                  <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => startEditVersion(v)} className="p-0.5 hover:text-white" title="Rename">
-                      <Pencil size={11} />
-                    </button>
-                    <button onClick={() => duplicateVersion(v)} className="p-0.5 hover:text-white" title="Duplicate">
-                      <Copy size={11} />
-                    </button>
-                    {app.versions.length > 1 && (
-                      <button onClick={() => deleteVersion(v.id)} className="p-0.5 hover:text-red-400" title="Delete">
-                        <Trash2 size={11} />
+                  {canEdit && (
+                    <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => startEditVersion(v)} className="p-0.5 hover:text-white" title="Rename">
+                        <Pencil size={11} />
                       </button>
-                    )}
-                  </div>
+                      <button onClick={() => duplicateVersion(v)} className="p-0.5 hover:text-white" title="Duplicate">
+                        <Copy size={11} />
+                      </button>
+                      {app.versions.length > 1 && (
+                        <button onClick={() => deleteVersion(v.id)} className="p-0.5 hover:text-red-400" title="Delete">
+                          <Trash2 size={11} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -401,7 +406,7 @@ export default function AppEditor({ app, onUpdate }: Props) {
               <label className="text-xs font-medium text-gray-400">Title</label>
               <span className={`text-xs ${currentLoc.title.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.title.length}/30</span>
             </div>
-            <input type="text" value={currentLoc.title} onChange={e => updateField('title', e.target.value)}
+            <input type="text" value={currentLoc.title} onChange={e => updateField('title', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder={`App title (${langName})`} />
           </div>
           <div>
@@ -409,7 +414,7 @@ export default function AppEditor({ app, onUpdate }: Props) {
               <label className="text-xs font-medium text-gray-400">Subtitle</label>
               <span className={`text-xs ${currentLoc.subtitle.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.subtitle.length}/30</span>
             </div>
-            <input type="text" value={currentLoc.subtitle} onChange={e => updateField('subtitle', e.target.value)}
+            <input type="text" value={currentLoc.subtitle} onChange={e => updateField('subtitle', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder={`App subtitle (${langName})`} />
           </div>
         </div>
@@ -422,7 +427,7 @@ export default function AppEditor({ app, onUpdate }: Props) {
             <label className="text-xs font-medium text-gray-400">Keywords (comma-separated)</label>
             <span className={`text-xs ${keywordsCount > 100 ? 'text-red-400' : 'text-gray-500'}`}>{keywordsCount}/100</span>
           </div>
-          <textarea value={currentLoc.keywords} onChange={e => updateField('keywords', e.target.value)} rows={3}
+          <textarea value={currentLoc.keywords} onChange={e => updateField('keywords', e.target.value)} readOnly={!canEdit} rows={3}
             className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
             placeholder="keyword1,keyword2,keyword3" />
         </div>
@@ -435,7 +440,7 @@ export default function AppEditor({ app, onUpdate }: Props) {
             <label className="text-xs font-medium text-gray-400">Description</label>
             <span className={`text-xs ${descriptionCount > 4000 ? 'text-red-400' : 'text-gray-500'}`}>{descriptionCount}/4000</span>
           </div>
-          <textarea value={currentLoc.description} onChange={e => updateField('description', e.target.value)} rows={10}
+          <textarea value={currentLoc.description} onChange={e => updateField('description', e.target.value)} readOnly={!canEdit} rows={10}
             className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-y"
             placeholder={`App description (${langName})`} />
         </div>
@@ -468,11 +473,13 @@ export default function AppEditor({ app, onUpdate }: Props) {
               ))}
             </div>
           )}
-          <button onClick={addScreenshots}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition-colors">
-            <Image size={16} />
-            Add Screenshots
-          </button>
+          {canEdit && (
+            <button onClick={addScreenshots}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition-colors">
+              <Image size={16} />
+              Add Screenshots
+            </button>
+          )}
         </div>
       </Section>
 

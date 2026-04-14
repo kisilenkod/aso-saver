@@ -16,7 +16,8 @@
       "Bash(vercel --version)",
       "Bash(vercel login:*)",
       "Bash(vercel --prod --yes)",
-      "Bash(vercel --prod --yes --name aso-saver)"
+      "Bash(vercel --prod --yes --name aso-saver)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -20,6 +20,15 @@ export interface AppVersion {
   createdAt: number;
 }
 
+export type MemberRole = 'owner' | 'editor' | 'viewer';
+
+export interface MemberInfo {
+  email: string;
+  displayName: string;
+  photoURL: string;
+  role: MemberRole;
+}
+
 export interface AppEntry {
   id: string;
   name: string;
@@ -28,6 +37,9 @@ export interface AppEntry {
   appStoreUrl: string;
   versions: AppVersion[];
   activeVersionId: string;
+  ownerId: string;
+  memberIds: string[];
+  members: Record<string, MemberInfo>;
   createdAt: number;
   updatedAt: number;
 }
