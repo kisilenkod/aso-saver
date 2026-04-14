@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(mdfind \"kMDItemFSName == 'node'\")",
+      "Bash(brew install:*)",
+      "Bash(npx --yes:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"vite --port 5173\")",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
