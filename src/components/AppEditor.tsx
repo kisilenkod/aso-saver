@@ -515,21 +515,20 @@ export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props)
               {currentLoc.screenshots.map((screenshot, index) => (
                 <div key={screenshot.id} draggable={canEdit} onDragStart={canEdit ? () => handleDragStart(index) : undefined} onDragOver={canEdit ? (e) => handleDragOver(e, index) : undefined}
                   onDrop={canEdit ? (e) => handleDrop(e, index) : undefined} onDragEnd={canEdit ? handleDragEnd : undefined}
-                  className={`relative group shrink-0 transition-all ${dragOverIndex === index ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-950 rounded-lg' : ''} ${dragIndex === index ? 'opacity-40' : ''}`}>
-                  {canEdit && <div className="absolute top-1 left-1 p-1 bg-black/60 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-10">
+                  className={`relative group shrink-0 h-48 rounded-lg overflow-hidden transition-all ${dragOverIndex === index ? 'ring-2 ring-blue-500' : ''} ${dragIndex === index ? 'opacity-40' : ''}`}>
+                  {canEdit && <div className="absolute top-1.5 left-1.5 p-1 bg-black/60 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-10">
                     <GripVertical size={12} className="text-white" />
                   </div>}
                   <button onClick={() => setPreviewImage(screenshot.url)}
-                    className="absolute top-1 left-1/2 -translate-x-1/2 p-1 bg-black/60 hover:bg-black/80 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Preview">
+                    className="absolute top-1.5 left-1/2 -translate-x-1/2 p-1 bg-black/60 hover:bg-black/80 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Preview">
                     <Maximize2 size={12} className="text-white" />
                   </button>
                   {canEdit && <button onClick={() => removeScreenshot(screenshot.id)}
-                    className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Remove">
+                    className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 hover:bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="Remove">
                     <Trash2 size={12} className="text-white" />
                   </button>}
-                  <img src={screenshot.url} alt={screenshot.name} className="h-48 w-auto rounded-lg border border-gray-700 object-cover cursor-pointer"
+                  <img src={screenshot.url} alt="" className="h-full w-auto object-contain cursor-pointer"
                     onClick={() => setPreviewImage(screenshot.url)} />
-                  <p className="text-xs text-gray-500 mt-1 max-w-[120px] truncate">{screenshot.name}</p>
                 </div>
               ))}
             </div>
