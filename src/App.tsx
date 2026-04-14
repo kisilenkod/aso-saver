@@ -102,6 +102,10 @@ export default function App() {
     setIsDirty(true);
   };
 
+  const handleNavigate = (updated: AppEntry) => {
+    setEditingApp(updated);
+  };
+
   const handleSave = async () => {
     if (!editingApp || !user || !selectedApp) return;
     setSaving(true);
@@ -290,7 +294,7 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto p-6">
           {editingApp ? (
-            <AppEditor key={editKey} app={editingApp} onUpdate={handleLocalUpdate} canEdit={canEdit} />
+            <AppEditor key={editKey} app={editingApp} onUpdate={handleLocalUpdate} onNavigate={handleNavigate} canEdit={canEdit} />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
               <div className="text-center">

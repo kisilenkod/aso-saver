@@ -6,6 +6,7 @@ import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical,
 interface Props {
   app: AppEntry;
   onUpdate: (app: AppEntry) => void;
+  onNavigate: (app: AppEntry) => void;
   canEdit: boolean;
 }
 
@@ -28,7 +29,7 @@ function CopyButton({ value, field, copiedField, onCopy }: { value: string; fiel
   );
 }
 
-export default function AppEditor({ app, onUpdate, canEdit }: Props) {
+export default function AppEditor({ app, onUpdate, onNavigate, canEdit }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [showAddLang, setShowAddLang] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -155,7 +156,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   };
 
   const switchVersion = (versionId: string) => {
-    onUpdate({ ...app, activeVersionId: versionId });
+    onNavigate({ ...app, activeVersionId: versionId });
     setActiveTab(0);
     setShowVersionMenu(false);
   };
