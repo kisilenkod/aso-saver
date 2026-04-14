@@ -401,9 +401,6 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-600 mt-2">
-          {new Date(activeVersion.createdAt).toLocaleDateString()} — Each version stores its own set of metadata for all languages
-        </p>
       </div>
 
       {/* Language Tabs */}
