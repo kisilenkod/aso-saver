@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { AppEntry, AppVersion, LocalizationData, Screenshot, LANGUAGES } from '../types';
-import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical, ExternalLink, Maximize2, Copy, Pencil, Check, Tag } from 'lucide-react';
+import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical, ExternalLink, Maximize2, Copy, Pencil, Check, Tag, ClipboardCopy, ClipboardCheck } from 'lucide-react';
 
 interface Props {
   app: AppEntry;
@@ -10,6 +10,21 @@ interface Props {
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function CopyButton({ value, field, copiedField, onCopy }: { value: string; field: string; copiedField: string | null; onCopy: (field: string) => void }) {
+  const isCopied = copiedField === field;
+  const handleCopy = () => {
+    if (!value) return;
+    navigator.clipboard.writeText(value);
+    onCopy(field);
+  };
+  return (
+    <button onClick={handleCopy} title={isCopied ? 'Copied!' : 'Copy to clipboard'}
+      className={`p-1 rounded transition-colors ${isCopied ? 'text-green-400' : 'text-gray-600 hover:text-gray-300'}`}>
+      {isCopied ? <ClipboardCheck size={13} /> : <ClipboardCopy size={13} />}
+    </button>
+  );
 }
 
 export default function AppEditor({ app, onUpdate, canEdit }: Props) {
@@ -24,6 +39,11 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     meta: true, keywords: true, description: true, screenshots: true,
   });
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const handleCopy = (field: string) => {
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
 
   // Refs to always have latest values in async callbacks
   const appRef = useRef(app);
@@ -424,16 +444,22 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
       <Section title="Title & Subtitle" sectionKey="meta" expanded={expandedSections.meta} onToggle={toggleSection}>
         <div className="space-y-3">
           <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-xs font-medium text-gray-400">Title</label>
+            <div className="flex justify-between items-center mb-1.5">
+              <div className="flex items-center gap-1">
+                <label className="text-xs font-medium text-gray-400">Title</label>
+                <CopyButton value={currentLoc.title} field="title" copiedField={copiedField} onCopy={handleCopy} />
+              </div>
               <span className={`text-xs ${currentLoc.title.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.title.length}/30</span>
             </div>
             <input key={`title-${locFieldKey}`} type="text" defaultValue={currentLoc.title} onChange={e => updateField('title', e.target.value)} readOnly={!canEdit}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" placeholder={`App title (${langName})`} />
           </div>
           <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-xs font-medium text-gray-400">Subtitle</label>
+            <div className="flex justify-between items-center mb-1.5">
+              <div className="flex items-center gap-1">
+                <label className="text-xs font-medium text-gray-400">Subtitle</label>
+                <CopyButton value={currentLoc.subtitle} field="subtitle" copiedField={copiedField} onCopy={handleCopy} />
+              </div>
               <span className={`text-xs ${currentLoc.subtitle.length > 30 ? 'text-red-400' : 'text-gray-500'}`}>{currentLoc.subtitle.length}/30</span>
             </div>
             <input key={`subtitle-${locFieldKey}`} type="text" defaultValue={currentLoc.subtitle} onChange={e => updateField('subtitle', e.target.value)} readOnly={!canEdit}
@@ -445,8 +471,11 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
       {/* Keywords */}
       <Section title="Keywords" sectionKey="keywords" expanded={expandedSections.keywords} onToggle={toggleSection}>
         <div>
-          <div className="flex justify-between mb-1.5">
-            <label className="text-xs font-medium text-gray-400">Keywords (comma-separated)</label>
+          <div className="flex justify-between items-center mb-1.5">
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-400">Keywords (comma-separated)</label>
+              <CopyButton value={currentLoc.keywords} field="keywords" copiedField={copiedField} onCopy={handleCopy} />
+            </div>
             <span className={`text-xs ${keywordsCount > 100 ? 'text-red-400' : 'text-gray-500'}`}>{keywordsCount}/100</span>
           </div>
           <textarea key={`keywords-${locFieldKey}`} defaultValue={currentLoc.keywords} onChange={e => updateField('keywords', e.target.value)} readOnly={!canEdit} rows={3}
@@ -459,7 +488,10 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
       <Section title="Description" sectionKey="description" expanded={expandedSections.description} onToggle={toggleSection}>
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-medium text-gray-400">Description</label>
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-400">Description</label>
+              <CopyButton value={currentLoc.description} field="description" copiedField={copiedField} onCopy={handleCopy} />
+            </div>
             <span className={`text-xs ${descriptionCount > 4000 ? 'text-red-400' : 'text-gray-500'}`}>{descriptionCount}/4000</span>
           </div>
           <textarea key={`description-${locFieldKey}`} defaultValue={currentLoc.description} onChange={e => updateField('description', e.target.value)} readOnly={!canEdit} rows={10}
