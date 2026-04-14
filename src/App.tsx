@@ -217,24 +217,24 @@ export default function App() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {!sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-white p-1">
+              <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-white p-1 shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
               </button>
             )}
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-lg font-semibold text-white truncate min-w-0">
               {editingApp ? editingApp.name : 'ASO Saver'}
             </h1>
             {selectedApp && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
+              <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
                 userRole === 'owner' ? 'bg-yellow-500/20 text-yellow-400' :
                 userRole === 'editor' ? 'bg-blue-500/20 text-blue-400' :
                 'bg-gray-500/20 text-gray-400'
               }`}>{userRole}</span>
             )}
             {isDirty && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">
+              <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 whitespace-nowrap">
                 unsaved
               </span>
             )}
