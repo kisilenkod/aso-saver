@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AppEntry, AppVersion, LocalizationData, Screenshot, LANGUAGES } from '../types';
 import { Plus, Trash2, Globe, Image, ChevronDown, ChevronRight, X, GripVertical, ExternalLink, Maximize2, Copy, Pencil, Check, Tag } from 'lucide-react';
 
@@ -24,6 +24,12 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     meta: true, keywords: true, description: true, screenshots: true,
   });
+
+  // Refs to always have latest values in async callbacks
+  const appRef = useRef(app);
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => { appRef.current = app; }, [app]);
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   const toggleSection = (key: string) => {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -174,8 +180,8 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
     if (activeTab >= updated.length) setActiveTab(updated.length - 1);
   };
 
-  // Screenshots
-  const addScreenshots = useCallback(() => {
+  // Screenshots — use refs to read latest state when async FileReaders complete
+  const addScreenshots = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -198,13 +204,18 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
           });
           loaded++;
           if (loaded === fileArray.length) {
-            const updatedVersion = { ...activeVersion };
-            updatedVersion.localizations = [...activeVersion.localizations];
-            const loc = { ...updatedVersion.localizations[activeTab] };
+            // Read latest state from refs
+            const latestApp = appRef.current;
+            const latestTab = activeTabRef.current;
+            const latestVersion = latestApp.versions.find(v => v.id === latestApp.activeVersionId) || latestApp.versions[0];
+            if (!latestVersion) return;
+            const updatedVersion = { ...latestVersion };
+            updatedVersion.localizations = [...latestVersion.localizations];
+            const loc = { ...updatedVersion.localizations[latestTab] };
             loc.screenshots = [...loc.screenshots, ...newScreenshots];
-            updatedVersion.localizations[activeTab] = loc;
-            const updatedApp = { ...app };
-            updatedApp.versions = app.versions.map(v => v.id === activeVersion.id ? updatedVersion : v);
+            updatedVersion.localizations[latestTab] = loc;
+            const updatedApp = { ...latestApp };
+            updatedApp.versions = latestApp.versions.map(v => v.id === latestVersion.id ? updatedVersion : v);
             onUpdate(updatedApp);
           }
         };
@@ -212,7 +223,7 @@ export default function AppEditor({ app, onUpdate, canEdit }: Props) {
       });
     };
     input.click();
-  }, [app, activeVersion, activeTab, onUpdate]);
+  };
 
   const removeScreenshot = (screenshotId: string) => {
     const updatedVersion = { ...activeVersion };

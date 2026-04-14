@@ -23,7 +23,7 @@ export function subscribeToApps(
   );
   return onSnapshot(q, (snapshot) => {
     const apps = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AppEntry));
-    apps.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    apps.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     callback(apps);
   });
 }
